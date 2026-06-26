@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>RCA Forge | Root Cause Analysis Builder</title>
+
+  <meta
+    name="description"
+    content="Free Root Cause Analysis (RCA) builder for industrial teams. Build structured RCA reports with Fishbone, 5 Whys, evidence review, root cause validation, and action plans."
+  />
+
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark">RCA</div>
+      <div>
+        <h1>RCA Forge</h1>
+        <p>Evidence-based Root Cause Analysis Builder</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="newProjectBtn" class="button secondary">New RCA</button>
+      <button id="saveProjectBtn" class="button primary">Save</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="sidebar">
+      <nav class="step-nav" aria-label="RCA workflow navigation">
+        <button class="step active" data-step="project">1. Project</button>
+        <button class="step" data-step="problem">2. Problem</button>
+        <button class="step" data-step="fishbone">3. Fishbone</button>
+        <button class="step" data-step="evidence">4. Evidence</button>
+        <button class="step" data-step="whys">5. 5 Whys</button>
+        <button class="step" data-step="rootcause">6. Root Cause</button>
+        <button class="step" data-step="actions">7. Actions</button>
+        <button class="step" data-step="export">8. Export</button>
+      </nav>
+    </aside>
+
+    <section class="workspace">
+      <section id="project" class="view active">
+        <div class="view-header">
+          <h2>Project Setup</h2>
+          <p>Start the RCA with basic information and choose the analysis structure.</p>
+        </div>
+
+        <div class="grid two">
+          <label class="field">
+            <span>RCA Title</span>
+            <input id="rcaTitle" type="text" placeholder="Example: Repeated label jam on packaging line" />
+          </label>
+
+          <label class="field">
+            <span>Prepared By</span>
+            <input id="preparedBy" type="text" placeholder="Name or team" />
+          </label>
+
+          <label class="field">
+            <span>Area / Process</span>
+            <input id="areaProcess" type="text" placeholder="Example: Packaging, Line 2, Cell A" />
+          </label>
+
+          <label class="field">
+            <span>Date</span>
+            <input id="rcaDate" type="date" />
+          </label>
+
+          <label class="field">
+            <span>Fishbone Template</span>
+            <select id="fishboneTemplate">
+              <option value="6m">6M - Standard Manufacturing</option>
+              <option value="5m">5M - Basic Manufacturing</option>
+              <option value="automation">Automation / Controls</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="quality">Quality</option>
+              <option value="commissioning">Commissioning</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>RCA Mode</span>
+            <select id="rcaMode">
+              <option value="standard">Standard RCA</option>
+              <option value="quick">Quick RCA</option>
+              <option value="full">Full RCA</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section id="problem" class="view">
+        <div class="view-header">
+          <h2>Problem Statement</h2>
+          <p>Define what happened before jumping to conclusions.</p>
+        </div>
+
+        <div class="grid one">
+          <label class="field">
+            <span>What happened?</span>
+            <textarea id="problemWhat" placeholder="Describe the issue clearly."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Where did it happen?</span>
+            <input id="problemWhere" type="text" placeholder="Machine, station, process, line, or area" />
+          </label>
+
+          <label class="field">
+            <span>When did it happen?</span>
+            <input id="problemWhen" type="text" placeholder="Shift, date, startup, after changeover, after maintenance, etc." />
+          </label>
+
+          <label class="field">
+            <span>Impact</span>
+            <textarea id="problemImpact" placeholder="Downtime, scrap, safety risk, quality defect, customer impact, etc."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Containment</span>
+            <textarea id="containment" placeholder="What was done to contain the issue temporarily?"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section id="fishbone" class="view">
+        <div class="view-header">
+          <h2>Fishbone Diagram</h2>
+          <p>Add possible causes by category. Each cause will later be reviewed with evidence.</p>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <h3>Add Possible Cause</h3>
+
+            <label class="field">
+              <span>Category</span>
+              <select id="causeCategory"></select>
+            </label>
+
+            <label class="field">
+              <span>Possible Cause</span>
+              <input id="causeText" type="text" placeholder="Example: Photoeye bracket was loose" />
+            </label>
+
+            <button id="addCauseBtn" class="button primary">Add Cause</button>
+          </div>
+
+          <div class="card">
+            <h3>Cause List</h3>
+            <div id="causeList" class="empty-state">No causes added yet.</div>
+          </div>
+        </div>
+
+        <div class="card diagram-card">
+          <h3>Fishbone View</h3>
+          <div id="fishboneDiagram" class="fishbone-diagram">
+            Fishbone diagram will appear here.
+          </div>
+        </div>
+      </section>
+
+      <section id="evidence" class="view">
+        <div class="view-header">
+          <h2>Evidence Review</h2>
+          <p>Review each possible cause before selecting the root cause.</p>
+        </div>
+
+        <div id="evidenceBoard" class="empty-state">
+          Add possible causes first to review evidence.
+        </div>
+      </section>
+
+      <section id="whys" class="view">
+        <div class="view-header">
+          <h2>5 Whys</h2>
+          <p>Use the 5 Whys to drill down from a selected issue to a root cause candidate.</p>
+        </div>
+
+        <div class="grid one">
+          <label class="field">
+            <span>Starting issue / cause</span>
+            <input id="whyStart" type="text" placeholder="What issue are you analyzing?" />
+          </label>
+
+          <label class="field"><span>Why 1</span><textarea id="why1"></textarea></label>
+          <label class="field"><span>Why 2</span><textarea id="why2"></textarea></label>
+          <label class="field"><span>Why 3</span><textarea id="why3"></textarea></label>
+          <label class="field"><span>Why 4</span><textarea id="why4"></textarea></label>
+          <label class="field"><span>Why 5</span><textarea id="why5"></textarea></label>
+        </div>
+      </section>
+
+      <section id="rootcause" class="view">
+        <div class="view-header">
+          <h2>Root Cause Validation</h2>
+          <p>Select the root cause and explain why the evidence supports it.</p>
+        </div>
+
+        <div class="grid one">
+          <label class="field">
+            <span>Root Cause</span>
+            <textarea id="rootCause" placeholder="State the verified root cause."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Evidence Summary</span>
+            <textarea id="evidenceSummary" placeholder="Summarize the evidence that supports this root cause."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Verification Method</span>
+            <textarea id="verificationMethod" placeholder="How was or will this root cause be verified?"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section id="actions" class="view">
+        <div class="view-header">
+          <h2>Action Plan</h2>
+          <p>Define corrective, preventive, and detection actions.</p>
+        </div>
+
+        <div class="card">
+          <h3>Add Action</h3>
+
+          <div class="grid two">
+            <label class="field">
+              <span>Action Type</span>
+              <select id="actionType">
+                <option value="Corrective">Corrective Action</option>
+                <option value="Preventive">Preventive Action</option>
+                <option value="Detection">Detection / Control Action</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Owner</span>
+              <input id="actionOwner" type="text" placeholder="Owner" />
+            </label>
+
+            <label class="field">
+              <span>Due Date</span>
+              <input id="actionDueDate" type="date" />
+            </label>
+
+            <label class="field">
+              <span>Status</span>
+              <select id="actionStatus">
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Action</span>
+            <textarea id="actionText" placeholder="Describe the action."></textarea>
+          </label>
+
+          <button id="addActionBtn" class="button primary">Add Action</button>
+        </div>
+
+        <div class="card">
+          <h3>Action List</h3>
+          <div id="actionList" class="empty-state">No actions added yet.</div>
+        </div>
+      </section>
+
+      <section id="export" class="view">
+        <div class="view-header">
+          <h2>Export</h2>
+          <p>Generate a clean RCA summary for review or presentation preparation.</p>
+        </div>
+
+        <div class="export-actions">
+          <button id="exportMarkdownBtn" class="button primary">Generate Markdown</button>
+          <button id="printReportBtn" class="button secondary">Print Report</button>
+        </div>
+
+        <textarea id="exportOutput" class="export-output" readonly placeholder="Generated RCA report will appear here."></textarea>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
