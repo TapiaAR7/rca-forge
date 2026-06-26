@@ -329,51 +329,38 @@ function createFishboneSlide(deck) {
     currentProject.problem.what ||
     "Problem";
 
-  const panel = {
+  slide.addShape(shape("rect"), {
     x: 0.55,
     y: 1.05,
     w: 12.25,
-    h: 5.75
-  };
-
-  slide.addShape(shape("rect"), {
-    x: panel.x,
-    y: panel.y,
-    w: panel.w,
-    h: panel.h,
+    h: 5.75,
     fill: { color: "FFFFFF" },
     line: { color: "D9E2EF", width: 1 }
   });
 
   const spineY = 3.75;
-  const spineX = 0.95;
-  const spineW = 9.05;
 
-  // Tail, built only with safe lines
+  addSafeLine(slide, 0.9, spineY, 9.25, 0, "102033", 3);
+
   addSafeLine(slide, 0.72, 3.38, 0.35, 0.37, "102033", 2);
   addSafeLine(slide, 0.72, 3.75, 0.35, 0, "102033", 2);
   addSafeLine(slide, 0.72, 3.75, 0.35, 0.37, "102033", 2);
 
-  // Main spine
-  addSafeLine(slide, spineX, spineY, spineW, 0, "102033", 3);
+  addSafeLine(slide, 10.05, spineY, 0.35, 0, "102033", 3);
 
-  // Nose / head connector
-  addSafeLine(slide, 9.95, spineY, 0.35, 0, "102033", 3);
-
-  // Problem box
   slide.addShape(shape("rect"), {
-    x: 10.3,
+    x: 10.4,
     y: 2.95,
-    w: 2.3,
+    w: 2.25,
     h: 1.6,
     fill: { color: "2563EB" },
     line: { color: "1D4ED8", width: 1.1 }
   });
 
   slide.addText("PROBLEM", {
-    x: 10.45,
+    x: 10.55,
     y: 3.08,
-    w: 2.0,
+    w: 1.95,
     h: 0.22,
     fontFace: "Arial",
     fontSize: 8,
@@ -383,9 +370,9 @@ function createFishboneSlide(deck) {
   });
 
   slide.addText(clean(problemTitle), {
-    x: 10.45,
+    x: 10.55,
     y: 3.35,
-    w: 2.0,
+    w: 1.95,
     h: 0.9,
     fontFace: "Arial",
     fontSize: 10,
@@ -400,60 +387,12 @@ function createFishboneSlide(deck) {
   const cardH = 1.32;
 
   const layout = [
-    {
-      cardX: 1.15,
-      cardY: 1.28,
-      lineX: 2.3,
-      lineY: 2.6,
-      lineW: 0.75,
-      lineH: 1.15,
-      ribY: 2.95
-    },
-    {
-      cardX: 4.0,
-      cardY: 1.28,
-      lineX: 5.15,
-      lineY: 2.6,
-      lineW: 0.75,
-      lineH: 1.15,
-      ribY: 2.95
-    },
-    {
-      cardX: 6.85,
-      cardY: 1.28,
-      lineX: 8.0,
-      lineY: 2.6,
-      lineW: 0.75,
-      lineH: 1.15,
-      ribY: 2.95
-    },
-    {
-      cardX: 1.15,
-      cardY: 5.05,
-      lineX: 2.3,
-      lineY: 3.75,
-      lineW: 0.75,
-      lineH: 1.3,
-      ribY: 4.2
-    },
-    {
-      cardX: 4.0,
-      cardY: 5.05,
-      lineX: 5.15,
-      lineY: 3.75,
-      lineW: 0.75,
-      lineH: 1.3,
-      ribY: 4.2
-    },
-    {
-      cardX: 6.85,
-      cardY: 5.05,
-      lineX: 8.0,
-      lineY: 3.75,
-      lineW: 0.75,
-      lineH: 1.3,
-      ribY: 4.2
-    }
+    { cardX: 1.15, cardY: 1.28, lineX: 2.3, lineY: 2.6, lineW: 0.75, lineH: 1.15, ribY: 2.95 },
+    { cardX: 4.0, cardY: 1.28, lineX: 5.15, lineY: 2.6, lineW: 0.75, lineH: 1.15, ribY: 2.95 },
+    { cardX: 6.85, cardY: 1.28, lineX: 8.0, lineY: 2.6, lineW: 0.75, lineH: 1.15, ribY: 2.95 },
+    { cardX: 1.15, cardY: 5.05, lineX: 2.3, lineY: 3.75, lineW: 0.75, lineH: 1.3, ribY: 4.2 },
+    { cardX: 4.0, cardY: 5.05, lineX: 5.15, lineY: 3.75, lineW: 0.75, lineH: 1.3, ribY: 4.2 },
+    { cardX: 6.85, cardY: 5.05, lineX: 8.0, lineY: 3.75, lineW: 0.75, lineH: 1.3, ribY: 4.2 }
   ];
 
   categories.forEach((category, index) => {
@@ -461,30 +400,18 @@ function createFishboneSlide(deck) {
 
     if (!item) return;
 
-    // Main fishbone branch
     addSafeLine(slide, item.lineX, item.lineY, item.lineW, item.lineH, "102033", 2);
-
-    // Small ribs on each branch. All lines use positive dimensions.
     addSafeLine(slide, item.lineX + 0.18, item.ribY, 0.25, 0.22, "667085", 0.8);
     addSafeLine(slide, item.lineX + 0.38, item.ribY + 0.18, 0.25, 0.22, "667085", 0.8);
 
     addFishboneCategoryCard(slide, category, item.cardX, item.cardY, cardW, cardH);
   });
 
-  slide.addShape(shape("rect"), {
-    x: 0.8,
-    y: 6.45,
-    w: 2.45,
-    h: 0.28,
-    fill: { color: "F8FAFC" },
-    line: { color: "D9E2EF", width: 0.6 }
-  });
-
   slide.addText("Method: Fishbone / Ishikawa", {
     x: 0.92,
     y: 6.51,
-    w: 2.2,
-    h: 0.14,
+    w: 2.7,
+    h: 0.2,
     fontFace: "Arial",
     fontSize: 7.5,
     color: "667085"
