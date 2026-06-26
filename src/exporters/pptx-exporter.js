@@ -27,13 +27,13 @@ function loadScript(url) {
     const existingScript = document.querySelector(`script[src="${url}"]`);
 
     if (existingScript) {
-      existingScript.addEventListener("load", resolve, { once: true });
-      existingScript.addEventListener("error", reject, { once: true });
-
       if (getPptxConstructor()) {
         resolve();
+        return;
       }
 
+      existingScript.addEventListener("load", resolve, { once: true });
+      existingScript.addEventListener("error", reject, { once: true });
       return;
     }
 
@@ -133,7 +133,8 @@ function addCard(slide, title, body, x, y, w, h) {
     fontFace: "Arial",
     fontSize: 11,
     bold: true,
-    color: "1D4ED8"
+    color: "1D4ED8",
+    fit: "shrink"
   });
 
   slide.addText(clean(body), {
@@ -247,28 +248,138 @@ function createFishboneSlide(deck) {
   const slide = deck.addSlide();
   slide.background = { color: "FFFFFF" };
 
-  addHeader(slide, "Fishbone Summary");
+  addHeader(slide, "Fishbone Diagram");
 
-  const categories = currentProject.fishbone.categories;
-  const colW = 3.85;
-  const rowH = 1.25;
-  const startX = 0.65;
-  const startY = 1.15;
-  const gapX = 0.3;
-  const gapY = 0.22;
+  const categories = currentProject.fishbone.categories.slice(0, 6);
+  const problemTitle =
+    currentProject.meta.title ||
+    currentProject.problem.what ||
+    "Problem";
 
-  categories.slice(0, 9).forEach((category, index) => {
-    const col = index % 3;
-    const row = Math.floor(index / 3);
+  const spineStartX = 1.2;
+  const spineY = 3.75;
+  const spineW = 8.75;
 
-    const x = startX + col * (colW + gapX);
-    const y = startY + row * (rowH + gapY);
+  slide.addShape(shape("line"), {
+    x: spineStartX,
+    y: spineY,
+    w: spineW,
+    h: 0,
+    line: { color: "102033", width: 2.2 }
+  });
+
+  slide.addShape(shape("triangle"), {
+    x: 9.85,
+    y: 3.55,
+    w: 0.35,
+    h: 0.4,
+    rotate: 90,
+    fill: { color: "102033" },
+    line: { color: "102033" }
+  });
+
+  slide.addShape(shape("rect"), {
+    x: 10.25,
+    y: 3.05,
+    w: 2.25,
+    h: 1.35,
+    fill: { color: "2563EB" },
+    line: { color: "2563EB", width: 1 }
+  });
+
+  slide.addText(clean(problemTitle), {
+    x: 10.38,
+    y: 3.18,
+    w: 2.0,
+    h: 1.05,
+    fontFace: "Arial",
+    fontSize: 10,
+    bold: true,
+    color: "FFFFFF",
+    align: "center",
+    valign: "mid",
+    fit: "shrink"
+  });
+
+  const positions = [
+    { x: 1.0, y: 1.25, anchorX: 2.35, anchorY: spineY, top: true },
+    { x: 4.0, y: 1.25, anchorX: 5.15, anchorY: spineY, top: true },
+    { x: 7.0, y: 1.25, anchorX: 7.95, anchorY: spineY, top: true },
+    { x: 1.0, y: 5.15, anchorX: 2.35, anchorY: spineY, top: false },
+    { x: 4.0, y: 5.15, anchorX: 5.15, anchorY: spineY, top: false },
+    { x: 7.0, y: 5.15, anchorX: 7.95, anchorY: spineY, top: false }
+  ];
+
+  categories.forEach((category, index) => {
+    const pos = positions[index];
+
+    if (!pos) return;
+
+    const boxX = pos.x;
+    const boxY = pos.y;
+    const boxW = 2.45;
+    const boxH = 1.35;
+
+    const connectToX = boxX + boxW / 2;
+    const connectToY = pos.top ? boxY + boxH : boxY;
+
+    slide.addShape(shape("line"), {
+      x: pos.anchorX,
+      y: pos.anchorY,
+      w: connectToX - pos.anchorX,
+      h: connectToY - pos.anchorY,
+      line: { color: "102033", width: 1.6 }
+    });
+
+    slide.addShape(shape("rect"), {
+      x: boxX,
+      y: boxY,
+      w: boxW,
+      h: boxH,
+      fill: { color: "F8FBFF" },
+      line: { color: "BFD3FF", width: 1 }
+    });
+
+    slide.addText(category.name, {
+      x: boxX + 0.12,
+      y: boxY + 0.1,
+      w: boxW - 0.24,
+      h: 0.25,
+      fontFace: "Arial",
+      fontSize: 11,
+      bold: true,
+      color: "1D4ED8",
+      fit: "shrink"
+    });
 
     const causes = category.causes.length
-      ? category.causes.map((cause) => `• ${cause.text}`).join("\n")
-      : "No causes added";
+      ? category.causes
+          .slice(0, 3)
+          .map((cause) => `• ${cause.text}`)
+          .join("\n")
+      : "• No causes added";
 
-    addCard(slide, category.name, causes, x, y, colW, rowH);
+    slide.addText(causes, {
+      x: boxX + 0.12,
+      y: boxY + 0.43,
+      w: boxW - 0.24,
+      h: boxH - 0.52,
+      fontFace: "Arial",
+      fontSize: 7.8,
+      color: "102033",
+      valign: "top",
+      fit: "shrink"
+    });
+  });
+
+  slide.addText("Method used: Fishbone / Ishikawa", {
+    x: 0.65,
+    y: 6.72,
+    w: 6.5,
+    h: 0.25,
+    fontFace: "Arial",
+    fontSize: 8.5,
+    color: "667085"
   });
 
   addFooter(slide);
@@ -280,6 +391,7 @@ function createEvidenceSlides(deck) {
   if (causes.length === 0) {
     const slide = deck.addSlide();
     slide.background = { color: "FFFFFF" };
+
     addHeader(slide, "Evidence Review");
     addCard(slide, "Evidence", "No causes available for evidence review.", 0.65, 1.15, 12.0, 1.3);
     addFooter(slide);
