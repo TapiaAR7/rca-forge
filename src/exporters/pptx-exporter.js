@@ -13,7 +13,11 @@ function safeFileName(value) {
     .replace(/(^-|-$)/g, "");
 }
 
-function addHeader(deck, slide, title) {
+function shape(type) {
+  return window.pptxgen?.ShapeType?.[type] || type;
+}
+
+function addHeader(slide, title) {
   slide.addText(title, {
     x: 0.55,
     y: 0.35,
@@ -25,7 +29,7 @@ function addHeader(deck, slide, title) {
     color: "102033"
   });
 
-  slide.addShape(deck.ShapeType.line, {
+  slide.addShape(shape("line"), {
     x: 0.55,
     y: 0.86,
     w: 12.2,
@@ -47,8 +51,8 @@ function addFooter(slide) {
   });
 }
 
-function addCard(deck, slide, title, body, x, y, w, h) {
-  slide.addShape(deck.ShapeType.rect, {
+function addCard(slide, title, body, x, y, w, h) {
+  slide.addShape(shape("rect"), {
     x,
     y,
     w,
@@ -85,7 +89,7 @@ function createTitleSlide(deck) {
   const slide = deck.addSlide();
   slide.background = { color: "F8FAFC" };
 
-  slide.addShape(deck.ShapeType.rect, {
+  slide.addShape(shape("rect"), {
     x: 0,
     y: 0,
     w: 13.333,
@@ -94,7 +98,7 @@ function createTitleSlide(deck) {
     line: { color: "F8FAFC" }
   });
 
-  slide.addShape(deck.ShapeType.rect, {
+  slide.addShape(shape("rect"), {
     x: 0.75,
     y: 0.75,
     w: 1.05,
@@ -136,12 +140,11 @@ function createTitleSlide(deck) {
     color: "475467"
   });
 
-  addCard(deck, slide, "Prepared By", currentProject.meta.preparedBy, 0.75, 2.45, 3.7, 1.0);
-  addCard(deck, slide, "Area / Process", currentProject.meta.areaProcess, 4.8, 2.45, 3.7, 1.0);
-  addCard(deck, slide, "Date", currentProject.meta.date, 8.85, 2.45, 3.7, 1.0);
+  addCard(slide, "Prepared By", currentProject.meta.preparedBy, 0.75, 2.45, 3.7, 1.0);
+  addCard(slide, "Area / Process", currentProject.meta.areaProcess, 4.8, 2.45, 3.7, 1.0);
+  addCard(slide, "Date", currentProject.meta.date, 8.85, 2.45, 3.7, 1.0);
 
   addCard(
-    deck,
     slide,
     "RCA Flow",
     "Problem → Fishbone → Evidence → 5 Whys → Root Cause → Actions",
@@ -158,10 +161,9 @@ function createProblemSlide(deck) {
   const slide = deck.addSlide();
   slide.background = { color: "FFFFFF" };
 
-  addHeader(deck, slide, "Problem Statement");
+  addHeader(slide, "Problem Statement");
 
   addCard(
-    deck,
     slide,
     "Problem Summary",
     buildProblemStatement() || "No problem statement entered.",
@@ -171,8 +173,8 @@ function createProblemSlide(deck) {
     2.35
   );
 
-  addCard(deck, slide, "Impact", currentProject.problem.impact, 0.65, 3.85, 5.85, 1.35);
-  addCard(deck, slide, "Containment", currentProject.problem.containment, 6.8, 3.85, 5.85, 1.35);
+  addCard(slide, "Impact", currentProject.problem.impact, 0.65, 3.85, 5.85, 1.35);
+  addCard(slide, "Containment", currentProject.problem.containment, 6.8, 3.85, 5.85, 1.35);
 
   addFooter(slide);
 }
@@ -181,7 +183,7 @@ function createFishboneSlide(deck) {
   const slide = deck.addSlide();
   slide.background = { color: "FFFFFF" };
 
-  addHeader(deck, slide, "Fishbone Summary");
+  addHeader(slide, "Fishbone Summary");
 
   const categories = currentProject.fishbone.categories;
   const colW = 3.85;
@@ -202,7 +204,7 @@ function createFishboneSlide(deck) {
       ? category.causes.map((cause) => `• ${cause.text}`).join("\n")
       : "No causes added";
 
-    addCard(deck, slide, category.name, causes, x, y, colW, rowH);
+    addCard(slide, category.name, causes, x, y, colW, rowH);
   });
 
   addFooter(slide);
@@ -214,9 +216,8 @@ function createEvidenceSlides(deck) {
   if (causes.length === 0) {
     const slide = deck.addSlide();
     slide.background = { color: "FFFFFF" };
-
-    addHeader(deck, slide, "Evidence Review");
-    addCard(deck, slide, "Evidence", "No causes available for evidence review.", 0.65, 1.15, 12.0, 1.3);
+    addHeader(slide, "Evidence Review");
+    addCard(slide, "Evidence", "No causes available for evidence review.", 0.65, 1.15, 12.0, 1.3);
     addFooter(slide);
     return;
   }
@@ -227,7 +228,7 @@ function createEvidenceSlides(deck) {
     const slide = deck.addSlide();
     slide.background = { color: "FFFFFF" };
 
-    addHeader(deck, slide, i === 0 ? "Evidence Review" : "Evidence Review Continued");
+    addHeader(slide, i === 0 ? "Evidence Review" : "Evidence Review Continued");
 
     const chunk = causes.slice(i, i + chunkSize);
 
@@ -242,7 +243,7 @@ function createEvidenceSlides(deck) {
         `Verification needed: ${clean(cause.verificationNeeded)}`
       ].join("\n");
 
-      addCard(deck, slide, cause.text, body, 0.65, y, 12.0, 1.25);
+      addCard(slide, cause.text, body, 0.65, y, 12.0, 1.25);
     });
 
     addFooter(slide);
@@ -253,15 +254,15 @@ function createFiveWhysSlide(deck) {
   const slide = deck.addSlide();
   slide.background = { color: "FFFFFF" };
 
-  addHeader(deck, slide, "5 Whys Analysis");
+  addHeader(slide, "5 Whys Analysis");
 
-  addCard(deck, slide, "Starting Issue / Cause", currentProject.fiveWhys.start, 0.65, 1.15, 12.0, 0.8);
+  addCard(slide, "Starting Issue / Cause", currentProject.fiveWhys.start, 0.65, 1.15, 12.0, 0.8);
 
   const whyText = currentProject.fiveWhys.whys
     .map((why, index) => `Why ${index + 1}: ${clean(why)}`)
     .join("\n\n");
 
-  addCard(deck, slide, "Why Chain", whyText, 0.65, 2.2, 12.0, 3.8);
+  addCard(slide, "Why Chain", whyText, 0.65, 2.2, 12.0, 3.8);
 
   addFooter(slide);
 }
@@ -270,11 +271,11 @@ function createRootCauseSlide(deck) {
   const slide = deck.addSlide();
   slide.background = { color: "FFFFFF" };
 
-  addHeader(deck, slide, "Root Cause Validation");
+  addHeader(slide, "Root Cause Validation");
 
-  addCard(deck, slide, "Root Cause", currentProject.rootCause.statement, 0.65, 1.15, 12.0, 1.25);
-  addCard(deck, slide, "Evidence Summary", currentProject.rootCause.evidenceSummary, 0.65, 2.75, 12.0, 1.55);
-  addCard(deck, slide, "Verification Method", currentProject.rootCause.verificationMethod, 0.65, 4.65, 12.0, 1.35);
+  addCard(slide, "Root Cause", currentProject.rootCause.statement, 0.65, 1.15, 12.0, 1.25);
+  addCard(slide, "Evidence Summary", currentProject.rootCause.evidenceSummary, 0.65, 2.75, 12.0, 1.55);
+  addCard(slide, "Verification Method", currentProject.rootCause.verificationMethod, 0.65, 4.65, 12.0, 1.35);
 
   addFooter(slide);
 }
@@ -283,10 +284,10 @@ function createActionsSlide(deck) {
   const slide = deck.addSlide();
   slide.background = { color: "FFFFFF" };
 
-  addHeader(deck, slide, "Action Plan");
+  addHeader(slide, "Action Plan");
 
   if (currentProject.actions.length === 0) {
-    addCard(deck, slide, "Actions", "No actions added.", 0.65, 1.15, 12.0, 1.0);
+    addCard(slide, "Actions", "No actions added.", 0.65, 1.15, 12.0, 1.0);
     addFooter(slide);
     return;
   }
@@ -305,7 +306,7 @@ function createActionsSlide(deck) {
     })
     .join("\n\n");
 
-  addCard(deck, slide, "Corrective / Preventive / Detection Actions", actionsText, 0.65, 1.15, 12.0, 5.3);
+  addCard(slide, "Corrective / Preventive / Detection Actions", actionsText, 0.65, 1.15, 12.0, 5.3);
 
   addFooter(slide);
 }
