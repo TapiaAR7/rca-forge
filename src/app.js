@@ -14,6 +14,7 @@ import {
 } from "./rca-engine.js";
 import { saveProject, loadProject } from "./storage.js";
 import { generateMarkdownReport } from "./exporters/markdown-exporter.js";
+import { generatePowerPointDeck } from "./exporters/pptx-exporter.js";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => document.querySelectorAll(selector);
@@ -66,8 +67,9 @@ const elements = {
   actionList: $("#actionList"),
 
   exportMarkdownBtn: $("#exportMarkdownBtn"),
+  exportPptxBtn: $("#exportPptxBtn"),
   printReportBtn: $("#printReportBtn"),
-  exportOutput: $("#exportOutput")
+  exportOutput: $("#exportOutput")  
 };
 
 function escapeHtml(value) {
@@ -440,6 +442,11 @@ function handlePrintReport() {
   elements.exportOutput.value = generateMarkdownReport();
   window.print();
 }
+async function handlePowerPointExport() {
+  syncProjectFromForm();
+  saveProject();
+  await generatePowerPointDeck();
+}
 
 function attachEvents() {
   elements.steps.forEach((step) => {
@@ -482,6 +489,7 @@ function attachEvents() {
   elements.newProjectBtn.addEventListener("click", handleNewProject);
   elements.addActionBtn.addEventListener("click", handleAddAction);
   elements.exportMarkdownBtn.addEventListener("click", handleMarkdownExport);
+  elements.exportPptxBtn.addEventListener("click", handlePowerPointExport);
   elements.printReportBtn.addEventListener("click", handlePrintReport);
 
   elements.causeList.addEventListener("click", (event) => {
