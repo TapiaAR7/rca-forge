@@ -14,7 +14,6 @@ import {
 } from "./rca-engine.js";
 import { saveProject, loadProject } from "./storage.js";
 import { generateMarkdownReport } from "./exporters/markdown-exporter.js";
-import { generatePowerPointDeck } from "./exporters/pptx-exporter.js";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => document.querySelectorAll(selector);
@@ -69,7 +68,7 @@ const elements = {
   exportMarkdownBtn: $("#exportMarkdownBtn"),
   exportPptxBtn: $("#exportPptxBtn"),
   printReportBtn: $("#printReportBtn"),
-  exportOutput: $("#exportOutput")  
+  exportOutput: $("#exportOutput")
 };
 
 function escapeHtml(value) {
@@ -169,7 +168,6 @@ function renderCategoryOptions() {
 
 function renderCauseList() {
   const categories = currentProject.fishbone.categories;
-
   const hasCauses = categories.some((category) => category.causes.length > 0);
 
   if (!hasCauses) {
@@ -183,7 +181,7 @@ function renderCauseList() {
   elements.causeList.innerHTML = categories
     .filter((category) => category.causes.length > 0)
     .map((category) => {
-      const causesHtml = category.causes
+      return category.causes
         .map((cause) => {
           return `
             <div class="cause-item">
@@ -198,8 +196,6 @@ function renderCauseList() {
           `;
         })
         .join("");
-
-      return causesHtml;
     })
     .join("");
 }
@@ -350,7 +346,6 @@ function handleAddCause() {
 
   const categoryId = elements.causeCategory.value;
   const causeText = elements.causeText.value;
-
   const cause = addCause(categoryId, causeText);
 
   if (!cause) {
@@ -417,7 +412,7 @@ function handleSave() {
 
 function handleNewProject() {
   const confirmNew = confirm(
-    "Start a new RCA? Current unsaved changes will be replaced."
+    "Start a new RCA? This will replace the current RCA saved in this browser."
   );
 
   if (!confirmNew) return;
@@ -428,12 +423,12 @@ function handleNewProject() {
   applyProjectToForm();
   renderAll();
   saveProject();
+  switchView("project");
 }
 
 function handleMarkdownExport() {
   syncProjectFromForm();
   saveProject();
-
   elements.exportOutput.value = generateMarkdownReport();
 }
 
@@ -442,10 +437,18 @@ function handlePrintReport() {
   elements.exportOutput.value = generateMarkdownReport();
   window.print();
 }
+
 async function handlePowerPointExport() {
   syncProjectFromForm();
   saveProject();
-  await generatePowerPointDeck();
+
+  try {
+    const pptxModule = await import(`./exporters/pptx-exporter.js?v=${Date.now()}`);
+    await pptxModule.generatePowerPointDeck();
+  } catch (error) {
+    console.error("PowerPoint export failed:", error);
+    alert("PowerPoint export failed, but your RCA is still saved. Try Generate Markdown or Print Report while we fix the PowerPoint exporter.");
+  }
 }
 
 function attachEvents() {
@@ -489,7 +492,11 @@ function attachEvents() {
   elements.newProjectBtn.addEventListener("click", handleNewProject);
   elements.addActionBtn.addEventListener("click", handleAddAction);
   elements.exportMarkdownBtn.addEventListener("click", handleMarkdownExport);
-  elements.exportPptxBtn.addEventListener("click", handlePowerPointExport);
+
+  if (elements.exportPptxBtn) {
+    elements.exportPptxBtn.addEventListener("click", handlePowerPointExport);
+  }
+
   elements.printReportBtn.addEventListener("click", handlePrintReport);
 
   elements.causeList.addEventListener("click", (event) => {
