@@ -1,6 +1,11 @@
 import { currentProject } from "../state.js";
 import { buildProblemStatement, getAllCauses } from "../rca-engine.js";
 
+const PPTX_CDN_URLS = [
+  "https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js",
+  "https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"
+];
+
 function clean(value, fallback = "-") {
   const text = String(value ?? "").trim();
   return text || fallback;
@@ -13,8 +18,67 @@ function safeFileName(value) {
     .replace(/(^-|-$)/g, "");
 }
 
+function getPptxConstructor() {
+  return window.PptxGenJS || window.pptxgen || window.pptxgenjs || null;
+}
+
+function loadScript(url) {
+  return new Promise((resolve, reject) => {
+    const existingScript = document.querySelector(`script[src="${url}"]`);
+
+    if (existingScript) {
+      existingScript.addEventListener("load", resolve, { once: true });
+      existingScript.addEventListener("error", reject, { once: true });
+
+      if (getPptxConstructor()) {
+        resolve();
+      }
+
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = url;
+    script.async = true;
+
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load ${url}`));
+
+    document.head.appendChild(script);
+  });
+}
+
+async function ensurePptxLibraryLoaded() {
+  const existingConstructor = getPptxConstructor();
+
+  if (existingConstructor) {
+    return existingConstructor;
+  }
+
+  for (const url of PPTX_CDN_URLS) {
+    try {
+      await loadScript(url);
+
+      const constructorAfterLoad = getPptxConstructor();
+
+      if (constructorAfterLoad) {
+        return constructorAfterLoad;
+      }
+    } catch (error) {
+      console.warn(error);
+    }
+  }
+
+  return null;
+}
+
 function shape(type) {
-  return window.pptxgen?.ShapeType?.[type] || type;
+  return (
+    window.PptxGenJS?.ShapeType?.[type] ||
+    window.pptxgen?.ShapeType?.[type] ||
+    window.pptxgenjs?.ShapeType?.[type] ||
+    type
+  );
 }
 
 function addHeader(slide, title) {
@@ -311,13 +375,41 @@ function createActionsSlide(deck) {
   addFooter(slide);
 }
 
+async function downloadDeck(deck, fileName) {
+  try {
+    await deck.writeFile({ fileName });
+    return;
+  } catch (error) {
+    console.warn("writeFile failed, trying Blob download:", error);
+  }
+
+  const blob = await deck.write("blob");
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
+}
+
 export async function generatePowerPointDeck() {
-  if (!window.pptxgen) {
-    alert("PowerPoint export library did not load. Refresh the page and try again.");
+  const PptxConstructor = await ensurePptxLibraryLoaded();
+
+  if (!PptxConstructor) {
+    alert(
+      "PowerPoint export could not load in this browser. You can still use Generate Markdown or Print Report."
+    );
     return;
   }
 
-  const deck = new window.pptxgen();
+  const deck = new PptxConstructor();
 
   deck.layout = "LAYOUT_WIDE";
   deck.author = "RCA Forge";
@@ -336,5 +428,5 @@ export async function generatePowerPointDeck() {
 
   const fileName = `${safeFileName(currentProject.meta.title)}.pptx`;
 
-  await deck.writeFile({ fileName });
+  await downloadDeck(deck, fileName);
 }
